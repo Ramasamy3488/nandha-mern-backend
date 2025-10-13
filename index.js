@@ -7,7 +7,10 @@ conn.connectDB();
 
 const app = express();
 
-app.use(cors());
+app.use(cors({
+  origin: "*"   // Or your frontend domain
+}));
+
 app.use(express.urlencoded({extended: false}));
 app.use(express.json()); 
 
@@ -18,4 +21,5 @@ app.use("/v1/api/students",studentRoute);
 
 app.listen(process.env.PORT, () => {
     console.log(`Server is listening on ${process.env.PORT}`);
+
 });
