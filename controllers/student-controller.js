@@ -9,25 +9,28 @@ async function readAllStudents(req, res) {
     }
 }
 
+
+
 async function readAStudent(req, res) {
     try {
-        const { name, email } = req.body;
-        if (!name && !email) {
-            return res.status(400).json({ error: "Please provide name or email" });
-        }
-
-        const search = new RegExp(name || email, 'i');
+        const searchTerm = req.body.name || req.body.email;
+        const search = new RegExp(searchTerm, 'i');
 
         const students = await studentsModel.find({
             $or: [{ name: search }, { email: search }]
         });
 
-        return res.json(students); // empty array if no match
+        if (students.length > 0) {
+            return res.json(students);
+        } else {
+            return res.json([]);
+        }
     } catch (err) {
-        console.error("readAStudent error:", err);
+        console.error("readATrainee error:", err);
         return res.status(500).json({ error: err.message });
     }
 }
+
 
 
 
@@ -87,4 +90,5 @@ module.exports = {
     updateAStudent,
     deleteAStudent
 };
+
 
