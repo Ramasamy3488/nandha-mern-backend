@@ -10,18 +10,26 @@ async function readAllStudents(req, res) {
 }
 
 async function readAStudent(req, res) {
-    const { name, email } = req.body;
     try {
-        const students = await studentsModel.find({ name, email });
-        if (students.length > 0) {
-            res.status(200).json(students);
-        } else {
-            res.status(404).json({ message: "No Students found!!!" });
+        const { name, email } = req.body;
+        if (!name && !email) {
+            return res.status(400).json({ error: "Please provide name or email" });
         }
+
+        const search = new RegExp(name || email, 'i');
+
+        const students = await studentsModel.find({
+            $or: [{ name: search }, { email: search }]
+        });
+
+        return res.json(students); // empty array if no match
     } catch (err) {
-        res.status(500).json({ error: err.message });
+        console.error("readAStudent error:", err);
+        return res.status(500).json({ error: err.message });
     }
 }
+
+
 
 async function addAStudent(req, res) {
     try {
@@ -79,3 +87,4 @@ module.exports = {
     updateAStudent,
     deleteAStudent
 };
+
