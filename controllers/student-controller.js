@@ -1,103 +1,81 @@
 const studentsModel = require('../models/student-model');
 
-
 async function readAllStudents(req, res) {
     try {
-        studentsModel.find({})
-            .then(students => {
-                res.json(students);
-            })
+        const students = await studentsModel.find({});
+        res.status(200).json(students);
     } catch (err) {
-        res.json(err.message);
+        res.status(500).json({ error: err.message });
     }
 }
 
 async function readAStudent(req, res) {
-
-    const {name, email} = req.body;
+    const { name, email } = req.body;
     try {
-        studentsModel.find({"name": name, "email": email})
-            .then(students => {
-                (students.length > 0) 
-                    ? 
-                    res.json(students)
-                    :
-                    res.json("No Students found!!!");
-               
-            })
+        const students = await studentsModel.find({ name, email });
+        if (students.length > 0) {
+            res.status(200).json(students);
+        } else {
+            res.status(404).json({ message: "No Students found!!!" });
+        }
     } catch (err) {
-        res.json(err.message);
+        res.status(500).json({ error: err.message });
     }
 }
 
-
 async function addAStudent(req, res) {
-
-    const Student = new studentsModel(req.body);
-
     try {
-        let studentExist = await studentsModel.find({"email": req.body.email})
-
+        const studentExist = await studentsModel.find({ email: req.body.email });
         if (studentExist.length > 0) {
-            return res.json({ message: "Student Already Exists!" });
+            return res.status(400).json({ message: "Student Already Exists!" });
         }
 
-         await Student.save();
+        const student = new studentsModel(req.body);
+        await student.save();
 
-        res.json({ message: "Student Added Successfully!" });
-
-
+        res.status(201).json({ message: "Student Added Successfully!" });
 
     } catch (err) {
-        let errorList = [];
-        if(err.errors) {
-            for(let temp in err.errors) {
-                errorList.push(err.errors[temp].message)
+        const errorList = [];
+        if (err.errors) {
+            for (let temp in err.errors) {
+                errorList.push(err.errors[temp].message);
             }
         }
-        res.json(errorList);
-    
+        res.status(400).json({ errors: errorList.length ? errorList : err.message });
     }
 }
 
 async function updateAStudent(req, res) {
     try {
-        studentsModel.updateOne({"email": req.body.email}, {$set: req.body})
-            .then(results => {
-                (results.modifiedCount > 0)
-                    ?
-                    res.json("Student Updated Successfully!")
-                    :
-                    res.json("Unable to update the Student!");
-            })
+        const results = await studentsModel.updateOne({ email: req.body.email }, { $set: req.body });
+        if (results.modifiedCount > 0) {
+            res.status(200).json({ message: "Student Updated Successfully!" });
+        } else {
+            res.status(404).json({ message: "Unable to update the Student!" });
+        }
     } catch (err) {
-        res.json(err.message);
+        res.status(500).json({ error: err.message });
     }
 }
 
 async function deleteAStudent(req, res) {
     try {
-        studentsModel.deleteOne({"email": req.body.email})
-            .then(results => {
-                (results.deletedCount > 0)
-                    ?
-                    res.json("Student deleted Successfully!")
-                    :
-                    res.json("Unable to update the Student!");
-            })
+        const results = await studentsModel.deleteOne({ email: req.body.email });
+        if (results.deletedCount > 0) {
+            res.status(200).json({ message: "Student deleted Successfully!" });
+        } else {
+            res.status(404).json({ message: "Unable to delete the Student!" });
+        }
     } catch (err) {
-        res.json(err.message);
+        res.status(500).json({ error: err.message });
     }
 }
 
-
-
-
-module.exports={
+module.exports = {
     readAllStudents,
     readAStudent,
     addAStudent,
     updateAStudent,
     deleteAStudent
-
-}
+};
